@@ -3,7 +3,7 @@
 # -----------------------------------------------------
 # KALI NETHUNTER INSTALLER (FINAL)
 # Author: Mahesh Technicals
-# Features: Skip Extraction if Exists, Sound Fix, Kex Manager
+# Features: Skip Extraction if Exists, Sound Fix, Kex Manager, Pro UI
 # -----------------------------------------------------
 
 # 1. COLOR DEFINITIONS
@@ -44,7 +44,6 @@ msg_err() {
 }
 
 # 3. CLEANUP & RESTORE TERMUX DEFAULTS
-# Removes old auto-login or audio configs to prevent conflicts
 sed -i '/( kali vnc & )/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/neofetch/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/termux-wake-lock/d' "$PREFIX/etc/bash.bashrc"
@@ -62,12 +61,10 @@ msg_info "Dependencies installed."
 msg_info "Configuring Audio Server..."
 pkill -f pulseaudio > /dev/null 2>&1
 
-# Add startup command to Termux bashrc
 cat >> "$PREFIX/etc/bash.bashrc" << EOF
 pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 > /dev/null 2>&1
 EOF
 
-# Start audio server immediately
 pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 > /dev/null 2>&1
 
 # 6. DETECT ARCHITECTURE
@@ -119,7 +116,6 @@ else
     axel -o "$IMAGE_NAME" "https://kali.download/nethunter-images/current/rootfs/$IMAGE_NAME"
 fi
 
-# Check file integrity
 echo " "
 msg_info "Calculating Hash (MD5)..."
 md5sum "$IMAGE_NAME"
@@ -147,24 +143,19 @@ fi
 # 11. CREATE KALI LAUNCHER
 cat > "$PREFIX/bin/$NM" <<- EOF
 #!/data/data/com.termux/files/usr/bin/bash
-
 cd "$HOME"
 unset LD_PRELOAD
-
 if [ ! -f $DIR/root/.version ]; then
     touch $DIR/root/.version
 fi
-
 user="$NM"
 home="/home/\$user"
 start="sudo -u kali /bin/bash"
-
 if grep -q "kali" ${DIR}/etc/passwd; then
     KALIUSR="1";
 else
     KALIUSR="0";
 fi
-
 if [[ \$KALIUSR == "0" || ("\$#" != "0" && ("\$1" == "-r" || "\$1" == "-R")) ]];then
     user="root"
     home="/\$user"
@@ -173,7 +164,6 @@ if [[ \$KALIUSR == "0" || ("\$#" != "0" && ("\$1" == "-r" || "\$1" == "-R")) ]];
         shift
     fi
 fi
-
 cmdline="proot \\
         --link2symlink -p \\
         -0 \\
@@ -189,7 +179,6 @@ cmdline="proot \\
            TERM=\$TERM \\
            LANG=C.UTF-8 \\
            \$start"
-
 cmd="\$@"
 if [ "\$#" == "0" ];then
     exec \$cmdline
@@ -199,50 +188,40 @@ fi
 EOF
 chmod 755 "$PREFIX/bin/$NM"
 
-# Modify .bash_profile inside Kali
 sed -i '/if/,/fi/d' "$DIR/root/.bash_profile"
-
-# Set SUID for sudo and su
 chmod +s "$DIR/usr/bin/sudo"
 chmod +s "$DIR/usr/bin/su"
 
-# Fix DNS
 cat > "$DIR/etc/resolv.conf" << EOF
 nameserver 9.9.9.9
 nameserver 8.8.8.8
 nameserver 1.1.1.1
 EOF
 
-# Fix Sudoers
 cat > "$DIR/etc/sudoers.d/$NM" << EOF
 $NM    ALL=(ALL:ALL) ALL
 EOF
 
-# Clean internal bashrc
 sed -i '/neofetch/d' "$DIR/etc/bash.bashrc"
 
-# Configure sudo.conf
 cat > "$DIR/etc/sudo.conf" << EOF
 Set disable_coredump false
 EOF
 
-# 12. CREATE KEX COMMAND (With Session Cleanup)
+# 12. CREATE KEX COMMAND
 cat > "$DIR/usr/bin/kex" << 'EOF'
 #!/bin/bash
-
 function help() {
     echo "Usage: kex [passwd | kill | start]"
     echo "  passwd : Set VNC password"
     echo "  kill   : Kill all VNC processes"
     echo "  start  : Start VNC server (default)"
 }
-
 if ! command -v vncserver &> /dev/null; then
     echo "[!] TigerVNC not found."
     echo "[*] Installing TigerVNC..."
     sudo apt update && sudo apt install tigervnc-standalone-server -y
 fi
-
 case "$1" in
     passwd)
         vncpasswd
@@ -271,7 +250,6 @@ chmod 755 "$DIR/usr/bin/kex"
 # 13. CREATE UNINSTALLER
 cat > "$PREFIX/bin/$NM-uninstall" << EOF
 #!/data/data/com.termux/files/usr/bin/bash
-
 rm -rf "$HOME/$DIR"
 rm -f "$PREFIX/bin/$NM"
 sed -i '/termux-wake-lock/d' "$PREFIX/etc/bash.bashrc"
@@ -289,7 +267,7 @@ GRPID=$(id -g)
 "$NM" -r usermod -u "$USRID" "$NM" >/dev/null 2>&1
 "$NM" -r groupmod -g "$GRPID" "$NM" >/dev/null 2>&1
 
-# 14. CLEANUP PROMPT & EXIT
+# 14. CLEANUP PROMPT & FINAL OUTPUT
 rm -f install.sh
 
 echo " "
@@ -305,15 +283,28 @@ else
     msg_info "Image file kept."
 fi
 
-banner
-msg_info "Installation Complete!"
-msg_info "Sound System Fixed (PulseAudio Configured)."
-echo " "
-echo -e "${Y}[*] COMMANDS TO RUN:${NC}"
-echo -e "    1. Type: ${G}kali${NC}    (Login as User)"
-echo -e "    2. Type: ${G}kali -r${NC} (Login as Root)"
-echo " "
-echo -e "${Y}[*] VNC SETUP (INSIDE KALI):${NC}"
-echo -e "    - Run: ${C}kex passwd${NC} (set password)"
-echo -e "    - Run: ${C}kex &${NC}      (start server)"
+clear
+
+# TABLE DISPLAY
+BC=$C # Border Color
+TC=$W # Text Color
+
+printf "${BC}╔══════════════════════════════════════════════════════╗${NC}\n"
+printf "${BC}║${Y}             INSTALLATION SUCCESSFUL!                 ${BC}║${NC}\n"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${W}%-16s ${BC}│ ${W}%-31s ${BC}║${NC}\n" "COMMAND" "FUNCTION / DESCRIPTION"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "kali" "Login as Standard User"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "kali -r" "Login as Root User"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${Y}%-49s ${BC}║${NC}\n" "          VNC / GUI SETUP (INSIDE KALI)"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "kex passwd" "Set VNC Password (First Time)"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "kex" "Start GUI Server"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "kex kill" "Stop Server & Clean Cache"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${Y}%-49s ${BC}║${NC}\n" "             DEFAULT CREDENTIALS"
+printf "${BC}╠══════════════════════════════════════════════════════╣${NC}\n"
+printf "${BC}║ ${G}%-16s ${BC}│ ${TC}%-31s ${BC}║${NC}\n" "Root Password" "kali"
+printf "${BC}╚══════════════════════════════════════════════════════╝${NC}\n"
 echo " "
