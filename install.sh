@@ -1,9 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # -----------------------------------------------------
-# KALI NETHUNTER INSTALLER (ULTIMATE EDITION)
+# KALI NETHUNTER INSTALLER (FINAL)
 # Author: Mahesh Technicals
-# Features: Sound Fix, Smart Update, Kex Manager
+# Features: Skip Extraction if Exists, Sound Fix, Kex Manager
 # -----------------------------------------------------
 
 # 1. COLOR DEFINITIONS
@@ -124,18 +124,16 @@ echo " "
 msg_info "Calculating Hash (MD5)..."
 md5sum "$IMAGE_NAME"
 
-# 9. EXTRACTION (Smart Update Mode)
+# 9. EXTRACTION (Smart Skip Logic)
 echo " "
 if [ -d "$DIR" ]; then
-    msg_info "Existing installation found ($DIR)."
-    msg_info "Overwriting system files with new image..."
-    msg_info "NOTE: User data will be preserved."
+    msg_info "Folder '$DIR' found."
+    msg_info "Skipping extraction as requested..."
 else
     msg_info "Creating new installation in '$DIR'..."
+    msg_info "Extracting rootfs... (This may take a while)"
+    proot --link2symlink bsdtar -xpJf "$IMAGE_NAME" >/dev/null 2>&1
 fi
-
-msg_info "Extracting rootfs... (This may take a while)"
-proot --link2symlink bsdtar -xpJf "$IMAGE_NAME" >/dev/null 2>&1
 
 # 10. CONFIGURE AUDIO BRIDGE (KALI SIDE)
 msg_info "Injecting Audio Bridge into Kali..."
