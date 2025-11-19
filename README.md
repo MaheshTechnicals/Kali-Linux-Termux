@@ -1,29 +1,34 @@
-# 🐉 Kali Linux NetHunter Installer for Termux
+<h1 align="center">🐉 Kali Linux NetHunter Installer for Termux</h1>
 
-<!-- Badges -->
+<div align="center">
+
 ![Version](https://img.shields.io/badge/version-3.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Termux-green.svg)
 ![Author](https://img.shields.io/badge/author-Mahesh%20Technicals-orange.svg)
 
-<!-- Header Image -->
-![Kali NetHunter Banner](res/NH.jpg)
+<br><br>
+<img src="res/NH.jpg" alt="Kali Linux NetHunter Termux Banner" width="100%">
+
+</div>
 
 ---
 
-**An advanced, automated installer to run Kali Linux NetHunter (Rootless) on Android devices using Termux.**
+### 🚀 Ultimate Mobile Hacking Station (No Root)
 
-This script installs a full Kali Linux environment without requiring root access. It comes pre-configured with audio support (PulseAudio), a custom VNC manager (`kex`), and smart update features that preserve your data during upgrades.
+Unlock the full potential of **mobile ethical hacking** with this **automated Kali Linux NetHunter installer for Termux**. Designed specifically for **Android devices without root**, this script seamlessly sets up a complete **Kali Linux (Rootless)** environment. 
+
+Unlike standard installations, this project features a built-in **Audio Fix (PulseAudio)**, a custom **Kex VNC Manager** for a smooth desktop experience, and intelligent **Smart Update** capabilities to safeguard your user data during upgrades. Transform your Android phone into a powerful **cybersecurity workstation** effortlessly.
 
 ---
 
 ## ✨ Key Features
 
-* **🔥 No Root Required**: Uses `proot` to simulate a root environment.
-* **🔊 Auto Sound Fix**: Integrated PulseAudio configuration. Audio from Kali works instantly on your Android device.
-* **🧠 Smart Download**: Automatically detects if the rootfs is already downloaded to save data.
-* **🔄 Smart Update**: Updates system files without deleting your personal user data (`/home` directory).
+* **🔥 No Root Required**: Uses `proot` to simulate a root environment safely on Android.
+* **🔊 Auto Sound Fix**: Integrated PulseAudio configuration. Sound from Kali tools works instantly.
+* **🧠 Smart Download**: Automatically detects existing files to prevent unnecessary data usage.
+* **🔄 Smart Update**: Updates system core files without deleting your personal `/home` directory or data.
 * **🖥️ Kex Manager**: A custom `kex` command to easily manage VNC sessions (Start, Stop, Password).
-* **📱 Multi-Arch Support**: Automatically detects `arm64`, `armhf`, `amd64`, or `i386`.
+* **📱 Multi-Arch Support**: Automatically detects and installs for `arm64`, `armhf`, `amd64`, or `i386`.
 
 ---
 
@@ -32,7 +37,7 @@ This script installs a full Kali Linux environment without requiring root access
 Before you begin, ensure your device meets the following requirements:
 
 1.  **Storage**: At least **15-20 GB** of free internal storage.
-2.  **Internet**: A stable connection (WiFi recommended) for the initial download (~1.5GB - 3GB depending on version).
+2.  **Internet**: A stable connection (WiFi recommended) for the initial download.
 3.  **Apps**: You need the following apps installed:
 
 | App Name | Description | Download Link |
@@ -56,7 +61,7 @@ apt update && apt upgrade -y
 ### 2. Download Installer
 Fetch the installation script from the repository.
 ```bash
-wget [https://raw.githubusercontent.com/MaheshTechnicals/Kali-Linux-Termux/refs/heads/main/install.sh](https://raw.githubusercontent.com/MaheshTechnicals/Kali-Linux-Termux/refs/heads/main/install.sh)
+wget https://raw.githubusercontent.com/MaheshTechnicals/Kali-Linux-Termux/refs/heads/main/install.sh
 ```
 
 ### 3. Grant Permissions
@@ -84,6 +89,11 @@ Once installed, you can use the following commands inside Termux:
 | :--- | :--- |
 | `kali` | Login to Kali Linux as a standard user (Recommended). |
 | `kali -r` | Login to Kali Linux as **Root**. |
+
+### 🔐 Default Credentials
+If asked for a password inside the system (e.g., for sudo or root access):
+* **User:** `root`
+* **Password:** `kali`
 
 ### 🖥️ Desktop (VNC) Commands
 We have included a custom tool called `kex` to manage your Graphical User Interface (GUI).
@@ -119,6 +129,16 @@ We have included a custom tool called `kex` to manage your Graphical User Interf
     * Run the script again. It will ask if you want to resume or re-download.
 * **"Signal 9" Error?**
     * This usually means the Android system killed Termux to save battery. Check your phone settings and allow Termux to run in the background (disable battery optimization for Termux).
+
+---
+
+## 💖 Support The Project
+
+If you find this tool helpful and want to support my work, please consider buying me a coffee!
+
+<a href="https://www.paypal.com/paypalme/Varma161" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
+- **UPI:** `maheshtechnicals@apl`
 
 ---
 
