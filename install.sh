@@ -1,8 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # -----------------------------------------------------
-# COLOR DEFINITIONS
+# KALI NETHUNTER INSTALLER (ULTIMATE EDITION)
+# Author: Mahesh Technicals
+# Features: Sound Fix, Smart Update, Kex Manager
 # -----------------------------------------------------
+
+# 1. COLOR DEFINITIONS
 R='\033[1;31m' # Red
 G='\033[1;32m' # Green
 Y='\033[1;33m' # Yellow
@@ -11,9 +15,7 @@ C='\033[1;36m' # Cyan
 W='\033[1;37m' # White
 NC='\033[0m'   # No Color
 
-# -----------------------------------------------------
-# HELPER FUNCTIONS
-# -----------------------------------------------------
+# 2. HELPER FUNCTIONS
 banner() {
     clear
     printf "${R}    ██╗  ██╗ █████╗ ██╗     ██╗${NC}\n"
@@ -41,27 +43,34 @@ msg_err() {
     echo -e "${R}[!] ${W}$1${NC}"
 }
 
-# -----------------------------------------------------
-# 1. CLEANUP & RESTORE TERMUX DEFAULTS
-# -----------------------------------------------------
-# Remove any previous auto-login or auto-vnc lines so Termux opens normally
+# 3. CLEANUP & RESTORE TERMUX DEFAULTS
+# Removes old auto-login or audio configs to prevent conflicts
 sed -i '/( kali vnc & )/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/neofetch/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/termux-wake-lock/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/kali -r/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/clear/d' "$PREFIX/etc/bash.bashrc"
+sed -i '/pulseaudio/d' "$PREFIX/etc/bash.bashrc"
 
-# -----------------------------------------------------
-# 2. INSTALL DEPENDENCIES
-# -----------------------------------------------------
+# 4. INSTALL DEPENDENCIES (With Audio Support)
 banner
 msg_info "Checking dependencies..."
-pkg install proot bsdtar libxml2 axel -y > /dev/null 2>&1
+pkg install proot bsdtar libxml2 axel pulseaudio -y > /dev/null 2>&1
 msg_info "Dependencies installed."
 
-# -----------------------------------------------------
-# 3. DETECT ARCHITECTURE
-# -----------------------------------------------------
+# 5. CONFIGURE AUDIO SERVER (TERMUX SIDE)
+msg_info "Configuring Audio Server..."
+pkill -f pulseaudio > /dev/null 2>&1
+
+# Add startup command to Termux bashrc
+cat >> "$PREFIX/etc/bash.bashrc" << EOF
+pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 > /dev/null 2>&1
+EOF
+
+# Start audio server immediately
+pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 > /dev/null 2>&1
+
+# 6. DETECT ARCHITECTURE
 case $(getprop ro.product.cpu.abi) in
     arm64-v8a) SYS_ARCH=arm64 ;;
     armeabi|armeabi-v7a) SYS_ARCH=armhf ;;
@@ -72,9 +81,7 @@ esac
 
 DIR="kali-${SYS_ARCH}"
 
-# -----------------------------------------------------
-# 4. SELECT VERSION
-# -----------------------------------------------------
+# 7. SELECT VERSION
 banner
 echo -e "${C}[*] Architecture : ${W}$SYS_ARCH"
 echo -e "${C}[*] Install Path : ${W}$DIR"
@@ -95,9 +102,7 @@ esac
 IMAGE_NAME="kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz"
 NM="kali"
 
-# -----------------------------------------------------
-# 5. SMART DOWNLOAD LOGIC
-# -----------------------------------------------------
+# 8. SMART DOWNLOAD LOGIC
 echo " "
 if [ -f "$IMAGE_NAME" ]; then
     msg_ask "File '$IMAGE_NAME' already exists."
@@ -119,9 +124,7 @@ echo " "
 msg_info "Calculating Hash (MD5)..."
 md5sum "$IMAGE_NAME"
 
-# -----------------------------------------------------
-# 6. EXTRACTION (Update Mode - No Data Loss)
-# -----------------------------------------------------
+# 9. EXTRACTION (Smart Update Mode)
 echo " "
 if [ -d "$DIR" ]; then
     msg_info "Existing installation found ($DIR)."
@@ -134,9 +137,16 @@ fi
 msg_info "Extracting rootfs... (This may take a while)"
 proot --link2symlink bsdtar -xpJf "$IMAGE_NAME" >/dev/null 2>&1
 
-# -----------------------------------------------------
-# 7. CREATE KALI LAUNCHER
-# -----------------------------------------------------
+# 10. CONFIGURE AUDIO BRIDGE (KALI SIDE)
+msg_info "Injecting Audio Bridge into Kali..."
+KALI_BASHRC="$DIR/etc/bash.bashrc"
+if ! grep -q "PULSE_SERVER" "$KALI_BASHRC"; then
+    echo " " >> "$KALI_BASHRC"
+    echo "# AUTOMATIC SOUND FIX" >> "$KALI_BASHRC"
+    echo "export PULSE_SERVER=127.0.0.1" >> "$KALI_BASHRC"
+fi
+
+# 11. CREATE KALI LAUNCHER
 cat > "$PREFIX/bin/$NM" <<- EOF
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -191,7 +201,7 @@ fi
 EOF
 chmod 755 "$PREFIX/bin/$NM"
 
-# Modify .bash_profile
+# Modify .bash_profile inside Kali
 sed -i '/if/,/fi/d' "$DIR/root/.bash_profile"
 
 # Set SUID for sudo and su
@@ -218,9 +228,7 @@ cat > "$DIR/etc/sudo.conf" << EOF
 Set disable_coredump false
 EOF
 
-# -----------------------------------------------------
-# 8. CREATE KEX COMMAND (With Session Cleanup)
-# -----------------------------------------------------
+# 12. CREATE KEX COMMAND (With Session Cleanup)
 cat > "$DIR/usr/bin/kex" << 'EOF'
 #!/bin/bash
 
@@ -262,19 +270,17 @@ esac
 EOF
 chmod 755 "$DIR/usr/bin/kex"
 
-# -----------------------------------------------------
-# 9. CREATE UNINSTALLER
-# -----------------------------------------------------
+# 13. CREATE UNINSTALLER
 cat > "$PREFIX/bin/$NM-uninstall" << EOF
 #!/data/data/com.termux/files/usr/bin/bash
 
 rm -rf "$HOME/$DIR"
 rm -f "$PREFIX/bin/$NM"
-# Remove startup configs
 sed -i '/termux-wake-lock/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/clear/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/$NM -r/d' "$PREFIX/etc/bash.bashrc"
 sed -i '/( kali vnc & )/d' "$PREFIX/etc/bash.bashrc"
+sed -i '/pulseaudio/d' "$PREFIX/etc/bash.bashrc"
 rm -f "$PREFIX/bin/$NM-uninstall"
 EOF
 chmod 755 "$PREFIX/bin/$NM-uninstall"
@@ -285,10 +291,7 @@ GRPID=$(id -g)
 "$NM" -r usermod -u "$USRID" "$NM" >/dev/null 2>&1
 "$NM" -r groupmod -g "$GRPID" "$NM" >/dev/null 2>&1
 
-# -----------------------------------------------------
-# 10. CLEANUP PROMPT & EXIT
-# -----------------------------------------------------
-# Auto-delete the install script itself
+# 14. CLEANUP PROMPT & EXIT
 rm -f install.sh
 
 echo " "
@@ -306,6 +309,7 @@ fi
 
 banner
 msg_info "Installation Complete!"
+msg_info "Sound System Fixed (PulseAudio Configured)."
 echo " "
 echo -e "${Y}[*] COMMANDS TO RUN:${NC}"
 echo -e "    1. Type: ${G}kali${NC}    (Login as User)"
@@ -314,5 +318,4 @@ echo " "
 echo -e "${Y}[*] VNC SETUP (INSIDE KALI):${NC}"
 echo -e "    - Run: ${C}kex passwd${NC} (set password)"
 echo -e "    - Run: ${C}kex &${NC}      (start server)"
-echo -e "    - Run: ${C}kex kill${NC}   (stop server)"
 echo " "
