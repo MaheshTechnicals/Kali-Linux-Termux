@@ -80,6 +80,30 @@ bash install.sh
 
 ---
 
+## 🌐 Browser Fix: Use Chromium (Video Issue Fix)
+
+If Firefox crashes or videos do not play, use this script to switch to **Chromium Browser** which works perfectly.
+
+**1. Login to Kali Linux:**
+```bash
+kali
+```
+
+**2. Download and Run the Fix Script:**
+```bash
+wget https://raw.githubusercontent.com/MaheshTechnicals/Kali-Linux-Termux/refs/heads/main/res/browser-fix.sh
+```
+```bash
+chmod +x browser-fix.sh
+```
+```bash
+bash browser-fix.sh
+```
+
+> **Note:** If asked for a password during installation, the default Root password is: `kali`
+
+---
+
 ## 🎮 Usage Guide
 
 Once installed, you can use the following commands inside Termux:
